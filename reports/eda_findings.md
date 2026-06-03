@@ -1,110 +1,152 @@
-# EDA Findings Report
+# Exploratory Data Analysis Findings
 
-## Overview
+## Abstract
 
-This report summarizes the exploratory data analysis performed in [01_eda.ipynb](C:\Users\athar\OneDrive\Documents\projects\Bloodless Cell Counter\notebooks\01_eda.ipynb). The notebook analyzes the processed patient-level dataset and focuses on how optical sensor readings relate to measured hemoglobin (`Actual_Hgb`).
+This document presents a structured summary of exploratory data analysis conducted in [01_eda.ipynb](/C:/Users/athar/OneDrive/Documents/projects/Bloodless%20Cell%20Counter/notebooks/01_eda.ipynb) for the Bloodless Cell Counter dataset. Analysis focused on whether optical sensor measurements and engineered signal features exhibit interpretable relationships with laboratory-measured hemoglobin (`Actual_Hgb`).
 
-The analysis is based on `10` patient records and `21` columns from `data/processed/patient_level_dataset.csv`. The workflow in the notebook includes:
+The notebook operates on a processed patient-level dataset containing `10` observations and `21` variables. EDA consisted of dataset inspection, descriptive statistics, completeness checks, pairwise correlation analysis, feature-wise regression visualization, and full correlation heatmap review. Results indicate that `MAX30102_IR` and `MAX30102_RED` show the strongest observable linear relationships with hemoglobin among plotted variables, though all observed effects remain moderate and should be interpreted cautiously given limited sample size.
 
-- dataset inspection
-- missing value checking
-- descriptive statistics
-- feature-to-hemoglobin correlation analysis
-- regression plots for selected sensor features
-- a full correlation heatmap
+## Study Context
 
-## Dataset Snapshot
+Non-invasive hemoglobin estimation depends on extracting robust physiological signal patterns from optical measurements. Before model development, it is necessary to determine whether measured channels and derived ratios demonstrate stable directional association with the target biomarker. This EDA serves that purpose: identify promising candidate features, surface weak or unstable relationships, and define realistic expectations for downstream modeling.
 
-### Shape
+## Data Summary
 
-- Rows: `10`
-- Columns: `21`
+### Dataset Profile
 
-### Data Quality
+| Item | Value |
+|------|-------|
+| Source file | `data/processed/patient_level_dataset.csv` |
+| Number of records | `10` |
+| Number of columns | `21` |
+| Primary target | `Actual_Hgb` |
+| Secondary clinical variable | `Actual_RBC` |
 
-- No missing values were found in any column used in the notebook.
-- The dataset is very small, so the patterns below should be treated as early signals rather than stable conclusions.
+### Completeness and Quality
 
-### Key Variables Used in the Notebook
+- No missing values were observed in any column used by the notebook.
+- Dataset includes raw optical channels, engineered ratios, engineered differences, and laboratory ground-truth measurements.
+- Sample size is extremely limited; therefore, findings should be treated as exploratory rather than confirmatory.
 
-- `Actual_Hgb`
+### Variables of Primary Interest
+
 - `MAX30102_IR`
 - `MAX30102_RED`
 - `AS7341_630nm`
 - `AS7341_680nm`
 - `RED_IR_DIFF`
+- `Actual_Hgb`
 
-## Correlation Findings
+## Analytical Procedure
 
-The notebook computes correlations after excluding the non-numeric `Patient Name` field. When ranked by correlation with `Actual_Hgb`, the main features used for plotting behave as follows:
+The notebook follows a compact but standard EDA workflow:
 
-| Feature | Correlation with `Actual_Hgb` | Interpretation |
-|--------|-------------------------------:|----------------|
-| `MAX30102_IR` | `-0.501` | Strongest relationship in this notebook; higher IR values tend to align with lower hemoglobin in this small sample. |
-| `MAX30102_RED` | `-0.411` | Moderate negative relationship with hemoglobin. |
-| `RED_IR_DIFF` | `0.365` | Moderate positive relationship. |
-| `AS7341_680nm` | `-0.326` | Weak-to-moderate negative relationship. |
-| `AS7341_630nm` | `-0.319` | Weak-to-moderate negative relationship. |
+1. Load processed patient-level dataset.
+2. Inspect shape, schema, summary statistics, and null counts.
+3. Remove non-numeric identifier field (`Patient Name`) for correlation analysis.
+4. Compute Pearson correlation matrix across numeric variables.
+5. Rank correlations with respect to `Actual_Hgb`.
+6. Generate regression plots for selected sensor features against hemoglobin.
+7. Review full correlation heatmap for broader multivariate context.
 
-Additional context from the full correlation ranking:
+This approach is suitable for early-stage signal screening but not sufficient for causal inference or clinical validation.
 
-- `Actual_RBC` shows a moderate positive correlation with `Actual_Hgb` at `0.367`.
-- Several engineered ratios show only weak relationships with hemoglobin in this dataset.
-- No feature in this notebook shows a very strong standalone linear correlation with `Actual_Hgb`.
+## Descriptive Observations
 
-## Visual EDA
+The dataset spans multiple optical sensing channels from AS7341 and MAX30102 devices along with derived ratios and differences. Measured hemoglobin values center around a mean of `13.4`, with observed range from `10.6` to `15.3`. Sensor channels exhibit substantial spread, especially `MAX30102_IR`, `MAX30102_RED`, `AS7341_630nm`, and `AS7341_680nm`, indicating usable variance for exploratory modeling.
 
-### 1. `RED_IR_DIFF` vs `Actual_Hgb`
+At same time, small cohort size means even visually consistent trends may be sensitive to single-point influence. Interpretation must therefore prioritize directionality and relative usefulness of features rather than precise effect magnitude.
 
-This plot suggests a mild positive trend. Patients with less negative `RED_IR_DIFF` values tend to show somewhat higher hemoglobin, but the spread is still wide.
+## Correlation Analysis
+
+### Correlation of Selected Features with `Actual_Hgb`
+
+| Feature | Correlation with `Actual_Hgb` | Analytical Reading |
+|--------|-------------------------------:|--------------------|
+| `MAX30102_IR` | `-0.501` | Strongest observable linear association in current notebook; higher IR readings correspond to lower hemoglobin in this sample. |
+| `MAX30102_RED` | `-0.411` | Moderate negative association; likely useful but weaker than IR channel. |
+| `RED_IR_DIFF` | `0.365` | Moderate positive association; engineered difference retains some discriminative value. |
+| `AS7341_680nm` | `-0.326` | Weak-to-moderate negative association. |
+| `AS7341_630nm` | `-0.319` | Weak-to-moderate negative association. |
+
+### Additional Context
+
+- `Actual_RBC` correlates positively with `Actual_Hgb` at `0.367`, which is directionally plausible from a physiological perspective.
+- Most engineered ratio variables show weak associations with hemoglobin in this sample.
+- No single feature demonstrates a sufficiently strong standalone linear relationship to justify single-variable clinical estimation.
+
+## Figure-Based Findings
+
+### Figure 1. `RED_IR_DIFF` vs `Actual_Hgb`
+
+This regression plot indicates a mild positive trend. Less negative `RED_IR_DIFF` values are associated with somewhat higher hemoglobin readings; however, dispersion remains broad, suggesting limited standalone predictive reliability.
 
 ![RED_IR_DIFF vs Hgb](../figures/RED_IR_DIFF%20vs%20Hgb%20Analysis.png)
 
-### 2. `MAX30102_RED` vs `Actual_Hgb`
+### Figure 2. `MAX30102_RED` vs `Actual_Hgb`
 
-This regression plot shows a moderate negative trend. Higher red-channel readings from the MAX30102 sensor are generally associated with lower hemoglobin values in this sample.
+This plot shows a moderate inverse trend. As red-channel intensity increases, hemoglobin tends to decrease within the observed sample. Relationship is visually clearer than most AS7341 wavelength plots, though still not tight enough to imply strong univariate predictability.
 
 ![MAX30102_RED vs Hgb](../figures/MAX30102_RED%20vs%20Hgb%20Analysis.png)
 
-### 3. `MAX30102_IR` vs `Actual_Hgb`
+### Figure 3. `MAX30102_IR` vs `Actual_Hgb`
 
-This is the clearest trend among the plotted features. The negative slope is consistent with the correlation output, making `MAX30102_IR` the most informative single plotted feature in this notebook.
+This is most informative single-feature plot in notebook. Negative slope is visibly consistent with correlation ranking and suggests that IR response may carry strongest usable hemoglobin signal among tested variables.
 
 ![MAX30102_IR vs Hgb](../figures/MAX30102_IR%20vs%20Hgb%20Analysis.png)
 
-### 4. `AS7341_630nm` vs `Actual_Hgb`
+### Figure 4. `AS7341_630nm` vs `Actual_Hgb`
 
-The 630nm channel shows a weak-to-moderate negative pattern. The trend exists, but there is enough variability that this feature alone would not be reliable for prediction.
+The 630nm channel displays a weak-to-moderate negative trend, but scatter remains considerable. Signal may contribute value in multivariate models even if independent explanatory power is limited.
 
 ![630nm vs Hgb](../figures/630nm%20vs%20Hgb%20Analysis.png)
 
-### 5. `AS7341_680nm` vs `Actual_Hgb`
+### Figure 5. `AS7341_680nm` vs `Actual_Hgb`
 
-The 680nm channel behaves similarly to the 630nm channel, with a slight negative trend and noticeable scatter around the regression line.
+The 680nm channel follows a similar pattern to 630nm, with slight inverse association and substantial spread around fitted line. This suggests partial signal relevance but limited standalone robustness.
 
 ![680nm vs Hgb](../figures/680nm%20vs%20Hgb%20Analysis.png)
 
-### 6. Full Correlation Heatmap
+### Figure 6. Global Correlation Structure
 
-The heatmap provides a broader view of how raw signals, derived ratios, and target variables move together. It confirms that the strongest visible hemoglobin relationships in this notebook are still only moderate, which supports using multivariate modeling instead of relying on a single sensor reading.
+Heatmap confirms that hemoglobin relationships across candidate features are mostly weak to moderate. It also shows that several optical variables and engineered features are mutually related, which supports a multivariate modeling strategy rather than reliance on any single channel.
 
 ![Correlation heatmap](../figures/Correlation%20heatmap.png)
 
-## Main EDA Takeaways
+## Interpretation
 
-1. `MAX30102_IR` appears to be the most promising single feature among those plotted for estimating hemoglobin.
-2. `MAX30102_RED` also carries useful signal, though weaker than the IR channel.
-3. `RED_IR_DIFF` may be more informative than simple raw wavelength channels from AS7341 in this small sample.
-4. The AS7341 wavelength readings at `630nm` and `680nm` show some relationship with hemoglobin, but not enough to support strong standalone conclusions.
-5. Because the dataset contains only `10` records, the current EDA is better suited for direction-finding than for final biomedical claims.
+Several conclusions emerge from current EDA:
 
-## Recommended Next Steps
+1. `MAX30102_IR` is strongest candidate feature among variables explicitly visualized in notebook.
+2. `MAX30102_RED` provides secondary but meaningful signal.
+3. `RED_IR_DIFF` appears more useful than many wavelength-specific engineered ratios, at least in this cohort.
+4. `AS7341_630nm` and `AS7341_680nm` contain signal, but relationship strength is insufficient for confident standalone use.
+5. Overall feature behavior supports combined-feature regression or ensemble modeling rather than simple threshold-based estimation.
 
-- expand the patient dataset before drawing stronger conclusions
-- evaluate multivariate models instead of single-feature interpretation only
-- test whether engineered ratios and differences improve prediction when combined with raw channels
-- validate findings with cross-validation and external samples
+## Limitations
+
+### Statistical Limitations
+
+- Sample size of `10` is too small for stable inferential conclusions.
+- Correlation estimates are highly sensitive to outliers and individual patient variation.
+- Linear trend inspection alone cannot capture possible nonlinear optical-physiological relationships.
+
+### Experimental Limitations
+
+- Notebook does not report confidence intervals, significance tests, or robustness diagnostics.
+- EDA is based on processed dataset only; raw acquisition conditions and measurement repeatability are not examined here.
+- No stratified analysis is present for age, sex, skin tone, acquisition setup, or other potential confounders.
+
+## Recommendations for Next Phase
+
+To move from exploratory analysis toward research-grade model development:
+
+1. Expand cohort size substantially before making biological or clinical claims.
+2. Evaluate multivariate regression models using combined raw and engineered features.
+3. Use cross-validation and patient-level holdout evaluation to reduce overfitting risk.
+4. Examine nonlinear models if linear relationships remain moderate.
+5. Add uncertainty reporting, residual analysis, and feature importance review in subsequent experiments.
 
 ## Conclusion
 
-The notebook shows that optical signals do carry some relationship with hemoglobin, especially the MAX30102 IR and red channels. However, the relationships are moderate and the sample size is very limited, so the safest conclusion is that the dataset supports further modeling work rather than definitive sensor-level claims.
+Current exploratory analysis shows that non-invasive optical signals in this dataset do contain detectable association with hemoglobin, with `MAX30102_IR` emerging as strongest individual candidate among plotted variables. Even so, present evidence remains preliminary. Main value of this EDA lies in feature prioritization and model direction-setting, not in final performance claims. Future work should therefore emphasize larger-sample validation, multivariate modeling, and stronger statistical reporting.
